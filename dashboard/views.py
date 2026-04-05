@@ -1,16 +1,16 @@
+from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from records.models import Record
 from django.db.models import Sum, Q
+from django.db.models.functions import TruncMonth
+from django.views.generic import TemplateView
 from users.permissions import RolePermission
 
 class DashboardSummary(APIView):
     allowed_roles = ['ADMIN', 'ANALYST', 'VIEWER']
 
     def get(self, request):
-        from django.db.models.functions import TruncMonth
-        from collections import defaultdict
-
         income = Record.objects.filter(type='income').aggregate(Sum('amount'))['amount__sum'] or 0
         expense = Record.objects.filter(type='expense').aggregate(Sum('amount'))['amount__sum'] or 0
         category_totals = list(Record.objects.values('category').annotate(total=Sum('amount')))
@@ -29,4 +29,8 @@ class DashboardSummary(APIView):
             "recent_activity": recent,
             "monthly_trends": monthly_trends
         })
+
+class FrontendDashboard(TemplateView):
+    template_name = 'dashboard/index.html'
+
 
